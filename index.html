@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Document</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Science+Gothic:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <audio id="fx" preload="auto">
+      <source src="blast-3.mp3" type="audio/mpeg" />
+    </audio>
+    <audio id="fx2" preload="auto">
+      <source src="star-wars-main-theme-full.mp3" type="audio/mpeg" />
+    </audio>
+    <div class="container">
+      <div class="battle-container">
+        <div class="deathstar-to-css-active"></div>
+        <div class="ship-to-css-active"></div>
+      </div>
+      <h1 class="star-wars">
+        Happy Birthday Owen!
+      </h1>
+      <div class="candles-wrapper" id="candles-wrapper">
+        <div class="candle-to-css-idle" id="candle"></div>
+      </div>
+      <div class="cake-to-css-active"></div>
+    </div>
+    <script>
+     
+      
+      // Trigger animation on click and play sound only while animations run
+      const audioEl = document.getElementById("fx");
+      const audioEl2 = document.getElementById("fx2");
+      const ANIMATION_DURATION = 1250; // ms — keep in sync with CSS
+
+      document.addEventListener("click", function () {
+        // play main theme immediately (gesture provided by click)
+        if (audioEl2) {
+          audioEl2.currentTime = 0;
+          audioEl2.play().catch(() => {});
+        }
+
+        const idleDeathstar = document.querySelector(".deathstar-to-css-idle");
+        const activeDeathstar = document.querySelector(
+          ".deathstar-to-css-active"
+        );
+        const idleShip = document.querySelector(".ship-to-css-idle");
+        const activeShip = document.querySelector(".ship-to-css-active");
+        const activeCake = document.querySelector(".cake-to-css-active");
+        const idleCandle = document.querySelector(".candle-to-css-idle");
+        const battleContainer = document.querySelector(".battle-container"); 
+        const container = document.querySelector(".container"); 
+        const original = document.getElementById("candle");
+        const text = document.querySelector(".star-wars");
+
+        if (idleDeathstar) idleDeathstar.classList.add("active");
+        if (activeDeathstar) activeDeathstar.classList.add("active");
+        if (idleShip) idleShip.classList.add("active");
+        if (activeShip) activeShip.classList.add("active");
+
+        if (audioEl) {
+          audioEl.currentTime = 0;
+          audioEl.play().catch(() => {});
+        }
+
+        // Stop animations and audio after the animation duration
+        setTimeout(() => {
+          if (activeDeathstar) activeDeathstar.classList.remove("active");
+          if (activeShip) activeShip.classList.remove("active");
+          if (audioEl) {
+            audioEl.pause();
+            audioEl.currentTime = 0;
+          }
+          for (let i = 0; i < 20; i++) {
+            const clone = original.cloneNode(true);
+            clone.removeAttribute('id');            // avoid duplicate id
+            clone.classList.add('active');         // make it visible/animated
+            clone.style.display = 'inline-block';  // allow horizontal layout
+            clone.style.marginLeft = `${i * 10}px`;
+            if(i % 2 === 0){
+              clone.style.marginTop = `10px`;
+            } // stagger them slightly
+            container.appendChild(clone);    // append into container (not body)
+          }
+          text.classList.add("active");
+          battleContainer.classList.add("active");
+          idleCandle.classList.add("active");
+          activeCake.classList.add("active");
+          
+        }, ANIMATION_DURATION);
+      });
+
+      async function startMicDetection(){
+        try{
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioContext.createMediaStreamSource(stream);
+          const analyser = audioContext.createAnalyser();
+          analyser.fftSize = 512;
+          source.connect(analyser);
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+          let blown = false;
+
+          function detectSound() {
+            analyser.getByteFrequencyData(dataArray);
+            
+            let highFreqSum =0;
+            let lowFreqSum = 0;
+
+            const midpoint = dataArray.length / 2;
+            for(let i= 0; i < dataArray.length;i++){
+              if(i< midpoint){
+                lowFreqSum += dataArray[i];
+              } else {
+                highFreqSum += dataArray[i];
+              }
+            }
+
+            const highAvg = highFreqSum / (dataArray.length / 2); 
+            const lowAvg = lowFreqSum / (dataArray.length / 2);
+
+            const ratio = highAvg / (lowAvg + 1); // +1 to avoid division by zero
+
+            const BLOW_RATIO_THRESHOLD = 0.5;
+
+            if(ratio > BLOW_RATIO_THRESHOLD && !blown){
+              blown = true;
+              blowoutCandles();
+            }
+            requestAnimationFrame(detectSound);
+          }
+          detectSound();
+        } catch (err) {
+          console.error('Error accessing microphone:', err);
+        }
+
+        function blowoutCandles(){
+          const candles = document.querySelectorAll(".candle-to-css-idle.active");
+          candles.forEach((candle) =>{
+            const delay = Math.random() * 1000;
+            setTimeout(() => {
+              candle.classList.add("blown-out");
+            }, delay);
+          });
+        }
+      };
+      startMicDetection();
+
+    </script>
+  </body>
+  
+</html>
