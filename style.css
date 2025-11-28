@@ -33,7 +33,7 @@ body {
   -webkit-animation: deathstaractive 1s infinite;
   -moz-animation: deathstaractive 1s infinite;
   -o-animation: deathstaractive 1s infinite;
-  left: 35%;
+  left: 25%;
   top: 20%;
   transform: scale(2);
   display: none;
@@ -669,7 +669,7 @@ body {
   -moz-animation: shipactive 1s infinite;
   -o-animation: shipactive 1s infinite;
   display: none;
-  left: 35%;
+  left: 25%;
   top: 40%;
 }
 
